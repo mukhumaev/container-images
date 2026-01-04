@@ -1,0 +1,3 @@
+
+# exclude tmp directories inside any immediate subdir of src
+src/*/tmp/
