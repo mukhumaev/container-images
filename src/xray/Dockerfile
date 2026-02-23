@@ -3,11 +3,15 @@ ARG GO_VERSION=1
 # Builder
 FROM golang:${GO_VERSION}-alpine AS builder
 
+ENV GIT_URL="https://github.com/XTLS/Xray-core"
+
+COPY ./tmp /app
+
 WORKDIR /app
 
 RUN apk add --no-cache git
 
-RUN git clone https://github.com/XTLS/Xray-core .     && \
+RUN test -d '.git' || git clone "${GIT_URL}" .        && \
     git checkout $(git rev-list --tags --max-count=1) && \
     go mod download -x                                && \
     CGO_ENABLED=0 go build \
