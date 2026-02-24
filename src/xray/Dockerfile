@@ -1,20 +1,21 @@
 ARG GO_VERSION=1
+ARG REGISTRY=docker.io
 
 # Builder
-FROM golang:${GO_VERSION}-alpine AS builder
+FROM ${REGISTRY}/golang:${GO_VERSION}-alpine AS builder
 
 ENV GIT_URL="https://github.com/XTLS/Xray-core"
 
-COPY ./tmp /app
+COPY tmp /app
 
 WORKDIR /app
 
 RUN apk add --no-cache git
 
-RUN test -d '.git' || git clone "${GIT_URL}" .        && \
-    git checkout $(git rev-list --tags --max-count=1) && \
-    go mod download -x                                && \
-    CGO_ENABLED=0 go build \
+RUN test -d '.git' && git pull -f || git clone "${GIT_URL}" . \
+    && git reset --hard $(git rev-list --tags --max-count=1) \
+    && go mod download -x \
+    && CGO_ENABLED=0 go build \
         -o xray            \
         -trimpath          \
         -buildvcs=false    \

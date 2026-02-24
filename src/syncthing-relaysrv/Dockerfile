@@ -1,19 +1,24 @@
 ARG GO_VERSION=1
+ARG REGISTRY=docker.io
 
 # Builder
-FROM golang:${GO_VERSION}-alpine AS builder
+FROM ${REGISTRY}/golang:${GO_VERSION}-alpine AS builder
+
+ENV GIT_URL="https://github.com/syncthing/syncthing"
+
+COPY tmp /app
 
 WORKDIR /app
 
 RUN apk add --no-cache git
 
-RUN git clone https://github.com/syncthing/syncthing . && \
-    git checkout $(git rev-list --tags --max-count=1) && \
-    CGO_ENABLED=0 go run build.go -no-upgrade build strelaysrv
+RUN test -d '.git' && git pull || git clone "${GIT_URL}" . \
+    && git reset --hard $(git rev-list --tags --max-count=1) \
+    && CGO_ENABLED=0 go run build.go -no-upgrade build strelaysrv
 
 
 # App
-FROM alpine
+FROM ${REGISTRY}/alpine
 
 LABEL maintainer="mukhumaev <47594681+mukhumaev@users.noreply.github.com>"
 LABEL version="latest"

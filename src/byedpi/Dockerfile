@@ -1,13 +1,18 @@
 ARG GCC_VERSION=15
+ARG REGISTRY=docker.io
 
 # Builder
-FROM gcc:${GCC_VERSION} AS builder
+FROM ${REGISTRY}/gcc:${GCC_VERSION} AS builder
+
+ENV GIT_URL="https://github.com/hufrea/byedpi"
+
+COPY tmp /app
 
 WORKDIR /app
 
-RUN git clone https://github.com/hufrea/byedpi .      && \
-    git checkout $(git rev-list --tags --max-count=1) && \
-    LDFLAGS=-static make
+RUN test -d '.git' && git pull || git clone "${GIT_URL}" . \
+    && git reset --hard $(git rev-list --tags --max-count=1) \
+    && LDFLAGS=-static make
 
 RUN useradd -u 1000 -M -d /nonexistent -s /sbin/nologin byedpi
 

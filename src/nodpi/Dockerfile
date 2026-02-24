@@ -1,13 +1,19 @@
+ARG REGISTRY=docker.io
+
 # Builder
-FROM alpine AS nodpi-builder
+FROM ${REGISTRY}/alpine AS nodpi-builder
+
+ENV GIT_URL="https://github.com/GVCoder09/NoDPI"
+
+COPY tmp /app
 
 WORKDIR /app
 
 # Download latest release source code
-RUN apk add --no-cache git && \
-    git clone https://github.com/GVCoder09/NoDPI . && \
-    mv src/main.py src/nodpi && \
-    rm -rf .git
+RUN apk add --no-cache git \
+    && test -d '.git' && git pull || git clone "${GIT_URL}" . \
+    && mv src/main.py src/nodpi \
+    && rm -rf .git
 
 # Preparing run script
 RUN echo '#!/bin/sh'                                              > ./entrypoint.sh && \

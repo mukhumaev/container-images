@@ -1,13 +1,18 @@
+ARG REGISTRY=docker.io
 
 # Builder
-FROM rust:alpine AS builder
+FROM ${REGISTRY}/rust:alpine AS builder
+
+ENV GIT_URL="https://github.com/telemt/telemt"
+
+COPY tmp /app
 
 WORKDIR /app
 
 RUN apk add --no-cache ca-certificates git pkgconf \
     && update-ca-certificates
 
-RUN git clone --depth=1 https://github.com/telemt/telemt . 
+RUN test -d '.git' && git pull || git clone --depth=1 "${GIT_URL}" . 
 
 RUN adduser -u 1000 -D -h /nonexistent -s /sbin/nologin telemt
 

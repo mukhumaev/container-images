@@ -49,7 +49,7 @@ Environment variables and parameters
   docker login <registry>
   ```
 
-- CONTAINER_MANAGER — container manager to use (e.g., `podman` or `docker`). Default: `docker`. Example:
+- CONTAINER_MANAGER — container manager to use (e.g., `buildah`, `podman` or `docker`). Default: `buildah`. Example:
   ```
   make build CONTAINER_MANAGER=podman IMAGE=myrepo/myimage TAG=latest
   ```

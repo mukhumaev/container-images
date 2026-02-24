@@ -1,13 +1,18 @@
 ARG RUST_VERSION=1
+ARG REGISTRY=docker.io
 
 # Builder
-FROM rust:${RUST_VERSION} AS builder
+FROM ${REGISTRY}/rust:${RUST_VERSION} AS builder
+
+ENV GIT_URL="https://github.com/tun2proxy/tun2proxy"
+
+COPY tmp /app
 
 WORKDIR /app
 
-RUN useradd -u 1000 -M -d /nonexistent -s /sbin/nologin tun2proxy && \
-    git clone https://github.com/tun2proxy/tun2proxy . && \
-    git checkout $(git rev-list --tags --max-count=1)
+RUN useradd -u 1000 -M -d /nonexistent -s /sbin/nologin tun2proxy \
+    && test -d '.git' && git pull || git clone "${GIT_URL}" . \
+    && git reset --hard $(git rev-list --tags --max-count=1)
 
 RUN cargo build --release
 

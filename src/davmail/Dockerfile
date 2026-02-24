@@ -1,8 +1,9 @@
 
 ARG JAVA_VERSION=17
+ARG REGISTRY=docker.io
 
 # Preparing
-FROM alpine AS builder
+FROM ${REGISTRY}/alpine AS builder
 
 ENV MAIN_URL="https://sourceforge.net/projects/davmail/files"
 
@@ -24,7 +25,7 @@ RUN adduser davmail -D && \
 
 
 # Building image
-FROM eclipse-temurin:${JAVA_VERSION}-jre-noble AS app
+FROM ${REGISTRY}/eclipse-temurin:${JAVA_VERSION}-jre-noble AS app
 
 LABEL maintainer="mukhumaev <47594681+mukhumaev@users.noreply.github.com>"
 LABEL version="latest"
