@@ -21,6 +21,10 @@ else
 	PUSH_REGISTRY := $(REGISTRY)
 endif
 
+ifeq ($(ARCH_PLATFORMS), all)
+	override ARCH_PLATFORMS := linux/arm/v7,linux/arm64,linux/amd64
+endif
+
 #### VARS
 
 SHELL := /bin/sh
