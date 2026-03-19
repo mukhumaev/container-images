@@ -3,7 +3,7 @@
 
 IMAGE ?=
 TAG ?=
-ARCH_PLATFORMS ?= linux/amd64
+ARCH_PLATFORMS ?= 
 BUILD_CACHE ?= true
 HTTPS_PROXY ?=
 HTTP_PROXY ?=
@@ -19,6 +19,40 @@ ifeq ($(REGISTRY), docker.io)
 	PUSH_REGISTRY := docker:/
 else
 	PUSH_REGISTRY := $(REGISTRY)
+endif
+
+ifeq ($(ARCH_PLATFORMS), all)
+	override ARCH_PLATFORMS := linux/arm/v7,linux/arm64,linux/amd64
+endif
+
+
+
+HOST ?= $(shell uname -m)
+
+# Normalize common uname -m values
+ifeq ($(HOST),x86_64)
+  _ARCH = x86_64
+else ifeq ($(HOST),amd64)
+  _ARCH = x86_64
+else ifneq (,$(findstring armv7,$(HOST)))
+  _ARCH = armv7
+else ifneq (,$(findstring aarch64,$(HOST)))
+  _ARCH = aarch64
+else ifneq (,$(findstring armv8,$(HOST)))
+  _ARCH = aarch64
+else
+  _ARCH = unknown
+endif
+
+# Map normalized arch to docker platform strings
+ifeq ($(_ARCH),x86_64)
+  override ARCH_PLATFORMS := linux/amd64
+else ifeq ($(_ARCH),aarch64)
+  override ARCH_PLATFORMS := linux/arm64
+else ifeq ($(_ARCH),armv7)
+  override ARCH_PLATFORMS := linux/arm/v7
+else
+  override ARCH_PLATFORMS := linux/amd64
 endif
 
 #### VARS
