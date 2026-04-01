@@ -21,10 +21,6 @@ else
 	PUSH_REGISTRY := $(REGISTRY)
 endif
 
-ifeq ($(ARCH_PLATFORMS), all)
-	override ARCH_PLATFORMS := linux/arm/v7,linux/arm64,linux/amd64
-endif
-
 
 
 HOST ?= $(shell uname -m)
@@ -44,16 +40,25 @@ else
   _ARCH = unknown
 endif
 
-# Map normalized arch to docker platform strings
-ifeq ($(_ARCH),x86_64)
-  override ARCH_PLATFORMS := linux/amd64
-else ifeq ($(_ARCH),aarch64)
-  override ARCH_PLATFORMS := linux/arm64
-else ifeq ($(_ARCH),armv7)
-  override ARCH_PLATFORMS := linux/arm/v7
-else
-  override ARCH_PLATFORMS := linux/amd64
+# helper: если пользователь не указал ARCH_PLATFORMS, выбрать по хосту
+ifeq ($(strip $(ARCH_PLATFORMS)),)
+  ifeq ($(_ARCH),x86_64)
+    override ARCH_PLATFORMS := linux/amd64
+  else ifeq ($(_ARCH),aarch64)
+    override ARCH_PLATFORMS := linux/arm64
+  else ifeq ($(_ARCH),armv7)
+    override ARCH_PLATFORMS := linux/arm/v7
+  else
+    override ARCH_PLATFORMS := linux/amd64
+  endif
 endif
+
+# если явно ALL (независимо от регистра) => задать полный набор
+ifeq ($(strip $(shell echo $(ARCH_PLATFORMS) | tr '[:upper:]' '[:lower:]')),all)
+  override ARCH_PLATFORMS := linux/arm/v7,linux/arm64,linux/amd64
+endif
+
+
 
 #### VARS
 
