@@ -10,7 +10,7 @@ COPY tmp /app
 
 WORKDIR /app
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git ca-certificates
 
 RUN test -d '.git' && git pull -f || git clone "${GIT_URL}" . \
     && git reset --hard $(git rev-list --tags --max-count=1) \
@@ -32,6 +32,7 @@ LABEL version="latest"
 
 COPY --from=builder /app/xray   /xray
 COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 VOLUME [/etc/xray]
 
