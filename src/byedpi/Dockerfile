@@ -10,7 +10,9 @@ COPY tmp /app
 
 WORKDIR /app
 
-RUN test -d '.git' && git pull || git clone "${GIT_URL}" . \
+RUN test -d '.git' \
+    && git pull \
+    || git clone "${GIT_URL}" . \
     && git reset --hard $(git rev-list --tags --max-count=1) \
     && LDFLAGS=-static make
 
