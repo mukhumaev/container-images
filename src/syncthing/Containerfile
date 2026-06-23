@@ -13,7 +13,7 @@ WORKDIR /app
 RUN apk add --no-cache git
 
 RUN test -d '.git' && git pull || git clone "${GIT_URL}" . \
-    && git reset --hard $(git rev-list --tags --max-count=1) \
+    && git checkout $(git tag | sort -V | grep -i -v -E  '(rc|alpha|beta)' | tail -n 1) \
     && CGO_ENABLED=0 go run build.go -no-upgrade build syncthing
 
 

@@ -13,7 +13,7 @@ WORKDIR /app
 RUN test -d '.git' \
     && git pull \
     || git clone "${GIT_URL}" . \
-    && git reset --hard $(git rev-list --tags --max-count=1) \
+    && git checkout $(git tag | sort -V | grep -i -v -E  '(rc|alpha|beta)' | tail -n 1) \
     && LDFLAGS=-static make
 
 RUN useradd -u 1000 -M -d /nonexistent -s /sbin/nologin byedpi
