@@ -1,0 +1,29 @@
+FROM debian:bookworm-slim AS build
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+       git gcc musl-dev musl-tools make ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV GIT_URL="https://github.com/timbrs/amneziawg-mikrotik-c"
+
+COPY tmp /app
+
+WORKDIR /app
+
+RUN test -d '.git' \
+    && git pull \
+    || git clone "${GIT_URL}" . \
+    && git checkout $(git tag | sort -V | grep -i -v -E  '(rc|alpha|beta)' | tail -n 1)
+
+ARG VERSION=dev
+RUN make build VERSION=${VERSION} CC=musl-gcc BUILD_DIR=/out && \
+    mkdir -p /out/etc && touch /out/etc/resolv.conf
+
+FROM scratch AS app
+LABEL maintainer="mukhumaev <47594681+mukhumaev@users.noreply.github.com>"
+LABEL version="latest"
+COPY --from=build /out/awg-proxy /awg-proxy
+COPY --from=build /out/etc/resolv.conf /etc/resolv.conf
+ENTRYPOINT ["/awg-proxy"]
+
