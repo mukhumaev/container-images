@@ -9,11 +9,21 @@ HTTP_PROXY ?=
 REGISTRY ?= docker.io
 CONTAINER_ENGINE ?= buildah
 
+# Переменные которые можно передать в make
+VALID_ARGS := IMAGE TAG ARCH_PLATFORMS BUILD_CACHE HTTPS_PROXY HTTP_PROXY REGISTRY CONTAINER_ENGINE
 
 ifeq ($(BUILD_CACHE), true)
-	LAYERS := --layers
+	LAYERS_FLAG := --layers
 else
-	LAYERS :=
+	LAYERS_FLAG :=
+endif
+
+ifeq ($(CONTAINER_ENGINE),buildah)
+    CONTAINER_BUILD_OPT := bud $(LAYERS_FLAG)
+else ifeq ($(CONTAINER_ENGINE),podman)
+    CONTAINER_BUILD_OPT := build $(LAYERS_FLAG)
+else
+    CONTAINER_BUILD_OPT := build
 endif
 
 ifeq ($(REGISTRY), docker.io)
@@ -77,12 +87,23 @@ define print_msg
 	@printf "\033[1m\033[33m%-s\033[0m\n" "$(1)"
 endef
 
+define check_unknown_args
+$(foreach v,$(.VARIABLES),\
+    $(if $(filter command line,$(origin $(v))),\
+        $(if $(filter $(v),$(VALID_ARGS)),,\
+            $(error ARG '$(v)' is unknown. Available ARGs: $(VALID_ARGS))\
+        )\
+    )\
+)
+endef
+
 .DEFAULT_GOAL := help
 .PHONY: check_args print_args ls build release help clean
 
 ################################################################################
 
 check_args:
+	$(check_unknown_args)
 	$(call require_var,IMAGE)
 	$(call require_var,TAG)
 	$(call require_var,ARCH_PLATFORMS)
@@ -123,7 +144,7 @@ build: check_args print_args ## Build multi-arch image manifest
 	fi
 	@$(CONTAINER_TOOL) manifest rm $(IMAGE_TAGGED) 2>/dev/null ||:
 	@$(CONTAINER_TOOL) manifest create $(IMAGE_TAGGED)
-	@$(CONTAINER_TOOL) bud $(LAYERS) \
+	@$(CONTAINER_TOOL) $(CONTAINER_BUILD_OPT) \
 		--platform "$(ARCH_PLATFORMS)" \
 		--build-arg REGISTRY=$(REGISTRY) \
 		-f "$(CONTAINERFILE)" \
